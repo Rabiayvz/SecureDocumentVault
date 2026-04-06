@@ -1,4 +1,5 @@
-﻿using FirstApi.Dtos;
+﻿using FirstApi.Business.Services;
+using FirstApi.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FirstApi.Controllers
@@ -8,26 +9,31 @@ namespace FirstApi.Controllers
     public class ApiStatusController : ControllerBase
     {
 
-        private static List<ProductDto> _products = new List<ProductDto>();
+        private readonly ProductService _productService;
+
+        public ApiStatusController(ProductService productService) {
+            _productService = productService;
+        }
+
 
         [HttpGet(Name = "GetApiStatus")]
-
         public IActionResult Get() {
             return Ok(new {message = "Controller is working 🚀"});
         }
 
-        [HttpGet("GetProducts")]
 
+        [HttpGet("GetProducts")]
         public IActionResult GetProducts()
         {
-            return Ok(_products);
+            var products = _productService.GetProducts();
+            return Ok(products);
         }
 
-        [HttpPost(Name = "PostApiStatus")]
 
+        [HttpPost(Name = "PostApiStatus")]
         public IActionResult Create([FromBody] ProductDto dto)
         {
-            _products.Add(dto);
+            _productService.AddProduct(dto);
 
             return Ok(new
             {
