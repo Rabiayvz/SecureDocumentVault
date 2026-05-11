@@ -1,19 +1,33 @@
-﻿using FirstApi.Dtos;
+﻿using FirstApi.Data;
+using FirstApi.Dtos;
+using FirstApi.Models;
 
-namespace FirstApi.services
+namespace FirstApi.Services
 {
     public class TodoService
     {
-        private static List<TodoDto> _todos = new List<TodoDto>();
+        private readonly AppDbContext _context;
 
-        public List<TodoDto> GetTodoList()
+        public TodoService(AppDbContext context)
         {
-            return _todos;
+            _context = context;
+        }
+        public List<Todo> GetTodoList()
+        {
+            return _context.Todos.ToList();
         }
 
         public void AddTodoItem(TodoDto dto)
         {
-            _todos.Add(dto);
+            var todo = new Todo
+            {
+                Title = dto.Title,
+                IsCompleted = dto.isCompleted
+            };
+
+            _context.Todos.Add(todo);
+
+            _context.SaveChanges();
         }
 
     }

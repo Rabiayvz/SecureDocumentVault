@@ -1,5 +1,5 @@
 ﻿using FirstApi.Dtos;
-using FirstApi.services;
+using FirstApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FirstApi.Controllers
