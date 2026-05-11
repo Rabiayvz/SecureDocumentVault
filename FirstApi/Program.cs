@@ -14,11 +14,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ApiStatusController ProductService isterse, onu oluşturup controller’a ver.
-builder.Services.AddScoped<ProductService>();
-
-builder.Services.AddScoped<TodoService>();
-
 
 var app = builder.Build();
 
