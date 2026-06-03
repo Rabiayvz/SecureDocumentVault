@@ -15,6 +15,8 @@ namespace FirstApi.Business.Services
             _context = context;
         }
 
+        //POST /documents
+        //Kullanıcı → DTO → Service → Entity → Database
         public int CreateDocument(CreateDocumentDto dto)
         {
             // fake encrpt
@@ -22,11 +24,8 @@ namespace FirstApi.Business.Services
 
             //hashing
             var bytes = Encoding.UTF8.GetBytes(dto.Content);
-
             using var sha256 = SHA256.Create();
-
             var hashBytes = sha256.ComputeHash(bytes);
-
             var contentHash = Convert.ToBase64String(hashBytes);
 
             //entity
@@ -46,14 +45,51 @@ namespace FirstApi.Business.Services
             return document.Id;
         }
 
-        public List<DocumentResponseDto> GetDocuments(int documentId)
+        public int VerifyDocumentContent(int documentId, string contentToVerify)
         {
             var document = _context.Documents.Find(documentId);
             if (document == null)
             {
-                throw new Exception("Document not found");
+                return 0; // Document not found
             }
-            return document.Id;
+            var bytes = Encoding.UTF8.GetBytes(contentToVerify);
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(bytes);
+            var contentHashToVerify = Convert.ToBase64String(hashBytes);
+            return document.ContentHash == contentHashToVerify ? 1 : -1; // 1: valid, -1: invalid
+        }
+
+
+        //GET /documents
+        //Database → Entity → Service → Response DTO → Kullanıcı
+        public List<DocumentResponseDto> GetDocuments()
+        {
+            var documents = _context.Documents.ToList();
+            var response = documents.Select(d => new DocumentResponseDto
+            {
+                Id = d.Id,
+                Title = d.Title,
+                OwnerUserId = d.OwnerUserId,
+                CreatedAt = d.CreatedAt
+            }).ToList();
+            return response;
+        }
+
+        public DocumentDetailResponseDto? GetDocumentById(int documentId)
+        {
+            var document = _context.Documents.Find(documentId);
+            if (document == null)
+            {
+                return null;
+            }
+            return new DocumentDetailResponseDto
+            {
+                Id = document.Id,
+                Title = document.Title,
+                OwnerUserId = document.OwnerUserId,
+                CreatedAt = document.CreatedAt,
+                Content = document.EncryptedContent
+            };
         }
     }
 }

@@ -8,7 +8,7 @@
         public string ContentHash { get; set; } = string.Empty;
         public int OwnerUserId { get; set; }
         public User? OwnerUser { get; set; }
-        public DateTime CreadtedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     }
 }
