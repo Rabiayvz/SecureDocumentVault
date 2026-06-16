@@ -17,7 +17,7 @@ namespace FirstApi.Business.Services
 
         //POST /documents
         //Kullanıcı → DTO → Service → Entity → Database
-        public int CreateDocument(CreateDocumentDto dto)
+        public Guid CreateDocument(CreateDocumentDto dto)
         {
             // fake encrpt
             var encryptedContent = "encrypted_" + dto.Content;
@@ -45,18 +45,18 @@ namespace FirstApi.Business.Services
             return document.Id;
         }
 
-        public int VerifyDocumentContent(int documentId, string contentToVerify)
+        public bool? VerifyDocumentContent(Guid documentId, string contentToVerify)
         {
             var document = _context.Documents.Find(documentId);
             if (document == null)
             {
-                return 0; // Document not found
+                return null; // Document not found
             }
             var bytes = Encoding.UTF8.GetBytes(contentToVerify);
             using var sha256 = SHA256.Create();
             var hashBytes = sha256.ComputeHash(bytes);
             var contentHashToVerify = Convert.ToBase64String(hashBytes);
-            return document.ContentHash == contentHashToVerify ? 1 : -1; // 1: valid, -1: invalid
+            return document.ContentHash == contentHashToVerify;
         }
 
 
@@ -75,7 +75,7 @@ namespace FirstApi.Business.Services
             return response;
         }
 
-        public DocumentDetailResponseDto? GetDocumentById(int documentId)
+        public DocumentDetailResponseDto? GetDocumentById(Guid documentId)
         {
             var document = _context.Documents.Find(documentId);
             if (document == null)

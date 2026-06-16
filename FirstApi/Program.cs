@@ -1,4 +1,4 @@
-using FirstApi.Services;
+using FirstApi.Business.Services;
 using FirstApi.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<DocumentService>();
 
 
 var app = builder.Build();
