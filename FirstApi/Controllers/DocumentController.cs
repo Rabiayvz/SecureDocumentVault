@@ -24,15 +24,44 @@ namespace FirstApi.Controllers
 
         [HttpGet]
         public IActionResult GetDocuments()
-        { 
+        {
             var documents = _documentService.GetDocuments();
 
             return Ok(documents);
         }
 
-        [HttpGet]
+        [HttpGet("{id}")]
+        public IActionResult GetDocumentById(Guid id)
+        {
+            var document = _documentService.GetDocumentById(id);
 
-        public IActionResult GetDocument(Guid id) {
+            if (document == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(document);
+        }
+
+        [HttpPost("{id}/verify")]
+        public IActionResult VerifyDocument(Guid id, VerifyDocumentDto dto)
+        {
+            var result = _documentService.VerifyDocumentContent(id, dto.Content);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            if (result.Value)
+            {
+                return Ok("Document is valid");
+            }
+
+            return Ok("Document is invalid");
+        }
+
 
     }
+
 }
