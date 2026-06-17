@@ -1,11 +1,14 @@
 ﻿using FirstApi.Dtos;
 using FirstApi.Business.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FirstApi.Controllers
 {
     [ApiController]
     [Route("documents")]
+    [Authorize]
     public class DocumentController : ControllerBase
     {
         private readonly DocumentService _documentService;
@@ -14,10 +17,17 @@ namespace FirstApi.Controllers
             _documentService = documentService;
         }
 
+        private Guid GetRequestingUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.Parse(userIdClaim!);
+        }
+
         [HttpPost]
         public IActionResult CreateDocument(CreateDocumentDto dto)
         {
-            var documentId = _documentService.CreateDocument(dto);
+            var requestingUserId = GetRequestingUserId();
+            var documentId = _documentService.CreateDocument(dto, requestingUserId);
 
             return Ok(documentId);
         }
@@ -25,7 +35,8 @@ namespace FirstApi.Controllers
         [HttpGet]
         public IActionResult GetDocuments()
         {
-            var documents = _documentService.GetDocuments();
+            var requestingUserId = GetRequestingUserId();
+            var documents = _documentService.GetDocuments(requestingUserId);
 
             return Ok(documents);
         }
@@ -33,35 +44,50 @@ namespace FirstApi.Controllers
         [HttpGet("{id}")]
         public IActionResult GetDocumentById(Guid id)
         {
-            var document = _documentService.GetDocumentById(id);
+            var requestingUserId = GetRequestingUserId();
 
-            if (document == null)
+            try
             {
-                return NotFound();
-            }
+                var document = _documentService.GetDocumentById(id, requestingUserId);
 
-            return Ok(document);
+                if (document == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(document);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid();
+            }
         }
 
         [HttpPost("{id}/verify")]
-        public IActionResult VerifyDocument(Guid id, VerifyDocumentDto dto)
+        public IActionResult VerifyDocument(Guid id)
         {
-            var result = _documentService.VerifyDocumentContent(id, dto.Content);
+            var requestingUserId = GetRequestingUserId();
 
-            if (result == null)
+            try
             {
-                return NotFound();
-            }
+                var result = _documentService.VerifyDocumentContent(id, requestingUserId);
 
-            if (result.Value)
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                if (result.Value)
+                {
+                    return Ok("Document is valid");
+                }
+
+                return Ok("Document is invalid");
+            }
+            catch (UnauthorizedAccessException ex)
             {
-                return Ok("Document is valid");
+                return Forbid();
             }
-
-            return Ok("Document is invalid");
         }
-
-
     }
-
 }

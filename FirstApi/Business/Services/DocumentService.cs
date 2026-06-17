@@ -9,24 +9,23 @@ namespace FirstApi.Business.Services
     public class DocumentService
     {
         private readonly AppDbContext _context;
+        private readonly CryptoService _cryptoService;
+        private readonly HashService _hashService;
 
-        public DocumentService(AppDbContext context)
+        public DocumentService(AppDbContext context, CryptoService cryptoService, HashService hashService)
         {
             _context = context;
+            _cryptoService = cryptoService;
+            _hashService = hashService;
         }
 
         //POST /documents
         //Kullanıcı → DTO → Service → Entity → Database
-        public Guid CreateDocument(CreateDocumentDto dto)
+        public Guid CreateDocument(CreateDocumentDto dto, Guid requestingUserId)
         {
             // fake encrpt
-            var encryptedContent = "encrypted_" + dto.Content;
-
-            //hashing
-            var bytes = Encoding.UTF8.GetBytes(dto.Content);
-            using var sha256 = SHA256.Create();
-            var hashBytes = sha256.ComputeHash(bytes);
-            var contentHash = Convert.ToBase64String(hashBytes);
+            var encryptedContent = _cryptoService.Encrypt(dto.Content);
+            var contentHash = _hashService.ComputeHash(dto.Content);
 
             //entity
             var document = new Document
@@ -34,7 +33,7 @@ namespace FirstApi.Business.Services
                 Title = dto.Title,
                 EncryptedContent = encryptedContent,
                 ContentHash = contentHash,
-                OwnerUserId = dto.OwnerUserId
+                OwnerUserId = requestingUserId
             };
 
             //db save
@@ -45,26 +44,34 @@ namespace FirstApi.Business.Services
             return document.Id;
         }
 
-        public bool? VerifyDocumentContent(Guid documentId, string contentToVerify)
+        public bool? VerifyDocumentContent(Guid documentId, Guid requestingUserId)
         {
             var document = _context.Documents.Find(documentId);
             if (document == null)
             {
-                return null; // Document not found
+                return null;
             }
-            var bytes = Encoding.UTF8.GetBytes(contentToVerify);
-            using var sha256 = SHA256.Create();
-            var hashBytes = sha256.ComputeHash(bytes);
-            var contentHashToVerify = Convert.ToBase64String(hashBytes);
-            return document.ContentHash == contentHashToVerify;
+
+            if (document.OwnerUserId != requestingUserId)
+            {
+                throw new UnauthorizedAccessException("Bu belgeye erişim yetkiniz yok.");
+            }
+
+            var decryptedContent = _cryptoService.Decrypt(document.EncryptedContent);
+
+            return _hashService.VerifyHash(decryptedContent, document.ContentHash);
+
         }
 
 
         //GET /documents
         //Database → Entity → Service → Response DTO → Kullanıcı
-        public List<DocumentResponseDto> GetDocuments()
+        public List<DocumentResponseDto> GetDocuments(Guid requestingUserId)
         {
-            var documents = _context.Documents.ToList();
+            var documents = _context.Documents
+                .Where(d => d.OwnerUserId == requestingUserId)
+                .ToList();
+
             var response = documents.Select(d => new DocumentResponseDto
             {
                 Id = d.Id,
@@ -75,20 +82,28 @@ namespace FirstApi.Business.Services
             return response;
         }
 
-        public DocumentDetailResponseDto? GetDocumentById(Guid documentId)
+        public DocumentDetailResponseDto? GetDocumentById(Guid documentId, Guid requestingUserId)
         {
             var document = _context.Documents.Find(documentId);
             if (document == null)
             {
                 return null;
             }
+
+            if (document.OwnerUserId != requestingUserId)
+            {
+                throw new UnauthorizedAccessException("Bu belgeye erişim yetkiniz yok.");
+            }
+
+            var decryptedContent = _cryptoService.Decrypt(document.EncryptedContent);
+
             return new DocumentDetailResponseDto
             {
                 Id = document.Id,
                 Title = document.Title,
                 OwnerUserId = document.OwnerUserId,
                 CreatedAt = document.CreatedAt,
-                Content = document.EncryptedContent
+                Content = decryptedContent
             };
         }
     }
