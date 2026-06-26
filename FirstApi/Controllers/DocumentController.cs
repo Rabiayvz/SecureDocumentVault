@@ -2,7 +2,6 @@
 using FirstApi.Business.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace FirstApi.Controllers
 {
@@ -12,52 +11,39 @@ namespace FirstApi.Controllers
     public class DocumentController : ControllerBase
     {
         private readonly DocumentService _documentService;
+
         public DocumentController(DocumentService documentService)
         {
             _documentService = documentService;
         }
 
-        private Guid GetRequestingUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.Parse(userIdClaim!);
-        }
-
         [HttpPost]
+        [Authorize(Roles = "Admin,Manager,User")]
         public IActionResult CreateDocument(CreateDocumentDto dto)
         {
-            var requestingUserId = GetRequestingUserId();
-            var documentId = _documentService.CreateDocument(dto, requestingUserId);
-
+            var documentId = _documentService.CreateDocument(dto);
             return Ok(documentId);
         }
 
         [HttpGet]
         public IActionResult GetDocuments()
         {
-            var requestingUserId = GetRequestingUserId();
-            var documents = _documentService.GetDocuments(requestingUserId);
-
+            var documents = _documentService.GetDocuments();
             return Ok(documents);
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Manager,User")]
         public IActionResult GetDocumentById(Guid id)
         {
-            var requestingUserId = GetRequestingUserId();
-
             try
             {
-                var document = _documentService.GetDocumentById(id, requestingUserId);
+                var document = _documentService.GetDocumentById(id);
 
-                if (document == null)
-                {
-                    return NotFound();
-                }
-
+                if (document == null) return NotFound();
                 return Ok(document);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }
@@ -66,25 +52,14 @@ namespace FirstApi.Controllers
         [HttpPost("{id}/verify")]
         public IActionResult VerifyDocument(Guid id)
         {
-            var requestingUserId = GetRequestingUserId();
-
             try
             {
-                var result = _documentService.VerifyDocumentContent(id, requestingUserId);
+                var result = _documentService.VerifyDocumentContent(id);
+                if (result == null) return NotFound();
+                return Ok(result.Value ? "Document is valid" : "Document is invalid");
 
-                if (result == null)
-                {
-                    return NotFound();
-                }
-
-                if (result.Value)
-                {
-                    return Ok("Document is valid");
-                }
-
-                return Ok("Document is invalid");
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }

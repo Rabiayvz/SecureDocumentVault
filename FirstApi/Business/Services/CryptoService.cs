@@ -13,7 +13,7 @@ namespace FirstApi.Business.Services
             {
                 throw new InvalidOperationException("Crypto:Key bulunamadı. User Secrets kontrol et.");
             }
-            _key = System.Text.Encoding.UTF8.GetBytes(keyString);
+            _key = Convert.FromBase64String(keyString);
         }
 
         public string Encrypt(string plainText)

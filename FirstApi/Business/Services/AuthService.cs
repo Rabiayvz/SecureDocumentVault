@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace FirstApi.Business.Services
 {
@@ -44,7 +45,9 @@ namespace FirstApi.Business.Services
 
         public string? Login(LoginDto dto)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+            var user = _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefault(u => u.Email == dto.Email);
             if (user == null)
             {
                 return null; // kullanıcı bulunamadı
@@ -69,7 +72,7 @@ namespace FirstApi.Business.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.RoleId.ToString())
+                new Claim(ClaimTypes.Role, user.Role!.Name)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!));

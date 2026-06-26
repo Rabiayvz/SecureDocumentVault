@@ -46,6 +46,9 @@ builder.Services.AddScoped<DocumentService>();
 builder.Services.AddScoped<CryptoService>();
 builder.Services.AddScoped<HashService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AdminService>();
+builder.Services.AddHttpContextAccessor();
+
 
 // JWT Authentication kurulumu
 var jwtSecret = builder.Configuration["Jwt:Secret"];
@@ -87,5 +90,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    SeedData.Seed(context);
+}
 
 app.Run();
