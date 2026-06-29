@@ -1,13 +1,12 @@
-﻿namespace FirstApi.Models
+namespace FirstApi.Dtos
 {
-    public class AuditLog
+    public class AuditLogResponseDto
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public User? User { get; set; }
         public string Action { get; set; } = string.Empty;
-        public string? IpAddress { get; set; }
         public string Details { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? IpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

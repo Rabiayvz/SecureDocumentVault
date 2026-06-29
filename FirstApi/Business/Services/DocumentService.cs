@@ -12,14 +12,16 @@ namespace FirstApi.Business.Services
         private readonly CryptoService _cryptoService;
         private readonly HashService _hashService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AuditLogService _auditLogService;
 
 
-        public DocumentService(AppDbContext context, CryptoService cryptoService, HashService hashService, IHttpContextAccessor httpContextAccessor)
+        public DocumentService(AppDbContext context, CryptoService cryptoService, HashService hashService, IHttpContextAccessor httpContextAccessor, AuditLogService auditLogService)
         {
             _context = context;
             _cryptoService = cryptoService;
             _hashService = hashService;
             _httpContextAccessor = httpContextAccessor;
+            _auditLogService = auditLogService;
         }
 
         private Guid GetCurrentUserId()
@@ -57,7 +59,7 @@ namespace FirstApi.Business.Services
             //db save
             _context.Documents.Add(document);
             _context.SaveChanges();
-
+            _auditLogService.Log("DocumentCreated", $"Document '{document.Title}' created. Id: {document.Id}");
             return document.Id;
         }
 
@@ -88,7 +90,11 @@ namespace FirstApi.Business.Services
             }
 
             var decryptedContent = _cryptoService.Decrypt(document.EncryptedContent);
-            return _hashService.VerifyHash(decryptedContent, document.ContentHash);
+            var result = _hashService.VerifyHash(decryptedContent, document.ContentHash);
+
+            _auditLogService.Log("DocumentVerified", $"Document '{document.Title}' verified. Id: {documentId}. Result: {result}");
+
+            return result;
 
         }
 
@@ -142,11 +148,17 @@ namespace FirstApi.Business.Services
 
             // Auditor içerik okuyamaz
             if (role == "Auditor")
+            {
+                _auditLogService.Log("UnauthorizedAccess", $"Unauthorized attempt to view document {documentId}");
                 throw new UnauthorizedAccessException("Auditors cannot read document content.");
+            }
 
             // User sadece kendi belgesini okuyabilir
             if (role == "User" && document.OwnerUserId != userId)
+            {
+                _auditLogService.Log("UnauthorizedAccess", $"Unauthorized attempt to view document {documentId}");
                 throw new UnauthorizedAccessException("You can only access your own documents.");
+            }
 
             // Manager sadece takımının belgelerini okuyabilir
             if (role == "Manager")
@@ -159,9 +171,12 @@ namespace FirstApi.Business.Services
                 teamUserIds.Add(userId);
 
                 if (!teamUserIds.Contains(document.OwnerUserId))
+                {
+                    _auditLogService.Log("UnauthorizedAccess", $"Unauthorized attempt to view document {documentId}");
                     throw new UnauthorizedAccessException("You can only access your team's documents.");
+                }
             }
-
+            _auditLogService.Log("DocumentViewed", $"Document '{document.Title}' viewed. Id: {documentId}");
             var decryptedContent = _cryptoService.Decrypt(document.EncryptedContent);
 
             return new DocumentDetailResponseDto

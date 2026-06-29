@@ -48,6 +48,7 @@ builder.Services.AddScoped<HashService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuditLogService>();
 
 
 // JWT Authentication kurulumu

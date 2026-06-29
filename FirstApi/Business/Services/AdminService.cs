@@ -8,12 +8,14 @@ namespace FirstApi.Business.Services
     {
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AuditLogService _auditLogService;
 
 
-        public AdminService(AppDbContext context, IHttpContextAccessor httpContextAccessor)
+        public AdminService(AppDbContext context, IHttpContextAccessor httpContextAccessor, AuditLogService auditLogService)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _auditLogService = auditLogService;
         }
 
         public List<UserResponseDto> GetAllUsers()
@@ -39,6 +41,7 @@ namespace FirstApi.Business.Services
 
             user.RoleId = roleId;
             _context.SaveChanges();
+            _auditLogService.Log("RoleAssigned", $"User {userId} assigned role {roleId}");
             return true;
         }
 

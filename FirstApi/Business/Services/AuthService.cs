@@ -13,11 +13,13 @@ namespace FirstApi.Business.Services
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly AuditLogService _auditLogService;
 
-        public AuthService(AppDbContext context, IConfiguration configuration)
+        public AuthService(AppDbContext context, IConfiguration configuration , AuditLogService auditLogService)
         {
             _context = context;
             _configuration = configuration;
+            _auditLogService = auditLogService;
         }
 
         public Guid Register(RegisterDto dto)
@@ -59,8 +61,9 @@ namespace FirstApi.Business.Services
                 return null; // şifre yanlış
             }
 
-            return GenerateJwtToken(user);
-        }
+            var token = GenerateJwtToken(user);
+            _auditLogService.Log("UserLoggedIn", $"User '{user.Email}' logged in.", user.Id);
+            return token;        }
 
         private string GenerateJwtToken(User user)
         {
