@@ -36,33 +36,17 @@ namespace FirstApi.Controllers
         [Authorize(Roles = "Admin,Manager,User")]
         public IActionResult GetDocumentById(Guid id)
         {
-            try
-            {
-                var document = _documentService.GetDocumentById(id);
-
-                if (document == null) return NotFound();
-                return Ok(document);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            var document = _documentService.GetDocumentById(id);
+            if (document == null) return NotFound();
+            return Ok(document);
         }
 
         [HttpPost("{id}/verify")]
         public IActionResult VerifyDocument(Guid id)
         {
-            try
-            {
-                var result = _documentService.VerifyDocumentContent(id);
-                if (result == null) return NotFound();
-                return Ok(result.Value ? "Document is valid" : "Document is invalid");
-
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            var result = _documentService.VerifyDocumentContent(id);
+            if (result == null) return NotFound();
+            return Ok(result.Value ? "Document is valid" : "Document is invalid");
         }
     }
 }

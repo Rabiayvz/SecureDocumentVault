@@ -152,7 +152,6 @@ namespace FirstApi.Business.Services
                 _auditLogService.Log("UnauthorizedAccess", $"Unauthorized attempt to view document {documentId}");
                 throw new UnauthorizedAccessException("Auditors cannot read document content.");
             }
-
             // User sadece kendi belgesini okuyabilir
             if (role == "User" && document.OwnerUserId != userId)
             {
@@ -171,10 +170,10 @@ namespace FirstApi.Business.Services
                 teamUserIds.Add(userId);
 
                 if (!teamUserIds.Contains(document.OwnerUserId))
-                {
-                    _auditLogService.Log("UnauthorizedAccess", $"Unauthorized attempt to view document {documentId}");
-                    throw new UnauthorizedAccessException("You can only access your team's documents.");
-                }
+                    {
+                        _auditLogService.Log("UnauthorizedAccess", $"Unauthorized attempt to view document {documentId}");
+                        throw new UnauthorizedAccessException("You can only access your team's documents.");
+                    }
             }
             _auditLogService.Log("DocumentViewed", $"Document '{document.Title}' viewed. Id: {documentId}");
             var decryptedContent = _cryptoService.Decrypt(document.EncryptedContent);

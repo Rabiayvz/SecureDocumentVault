@@ -18,26 +18,15 @@ namespace FirstApi.Controllers
         [HttpPost("register")]
         public IActionResult Register(RegisterDto dto)
         {
-            try
-            {
-                var userId = _authService.Register(dto);
-                return Ok(userId);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var userId = _authService.Register(dto);
+            return Ok(userId);
         }
 
         [HttpPost("login")]
         public IActionResult Login(LoginDto dto)
         {
             var token = _authService.Login(dto);
-
-            if (token == null)
-            {
-                return Unauthorized("Email veya şifre hatalı.");
-            }
+            if (token == null) return Unauthorized("Email veya şifre hatalı.");
 
             return Ok(new AuthResponseDto
             {

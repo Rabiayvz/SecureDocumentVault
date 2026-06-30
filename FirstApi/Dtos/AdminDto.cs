@@ -1,7 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FirstApi.Dtos
 {
     public class AssignRoleDto
     {
+        [Required] 
+        [Range(1, 4, ErrorMessage = "RoleId must be between 1 and 4.")]
         public int RoleId { get; set; }
     }
 
