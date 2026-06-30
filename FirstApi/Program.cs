@@ -82,11 +82,8 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
 
 app.UseMiddleware<FirstApi.Middlewares.ExceptionMiddleware>();
 
@@ -102,6 +99,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate();   // ← bu satırı ekle
     SeedData.Seed(context);
 }
 

@@ -12,13 +12,29 @@ namespace FirstApi.Business.Services
         {
             _logger = logger;
 
-            var privateKeyPem = configuration["Signature:PrivateKey"];
-            var publicKeyPem = configuration["Signature:PublicKey"];
+            string privateKeyPem;
+            string publicKeyPem;
+
+            var privateKeyPath = configuration["Signature:PrivateKeyPath"];
+            var publicKeyPath = configuration["Signature:PublicKeyPath"];
+
+            if (!string.IsNullOrEmpty(privateKeyPath) && File.Exists(privateKeyPath))
+            {
+                // Docker/dosya tabanlı okuma
+                privateKeyPem = File.ReadAllText(privateKeyPath);
+                publicKeyPem = File.ReadAllText(publicKeyPath!);
+            }
+            else
+            {
+                // Local development — User Secrets
+                privateKeyPem = configuration["Signature:PrivateKey"] ?? "";
+                publicKeyPem = configuration["Signature:PublicKey"] ?? "";
+            }
 
             if (string.IsNullOrEmpty(privateKeyPem) || string.IsNullOrEmpty(publicKeyPem))
             {
-                _logger.LogError("Signature keys not found in configuration.");
-                throw new InvalidOperationException("Signature:PrivateKey veya Signature:PublicKey bulunamadı.");
+                _logger.LogError("Signature keys not found.");
+                throw new InvalidOperationException("Signature keys bulunamadı.");
             }
 
             _privateRsa = RSA.Create();

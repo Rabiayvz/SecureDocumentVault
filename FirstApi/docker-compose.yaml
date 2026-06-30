@@ -1,0 +1,42 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firstapi
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=SecureDocumentVaultDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=FirstApi
+      - Jwt__ExpireHours=24
+      - Crypto__Key=${CRYPTO_KEY}
+      - Signature__PrivateKeyPath=/app/keys/private.pem
+      - Signature__PublicKeyPath=/app/keys/public.pem
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keys:/app/keys:ro
+
+volumes:
+  sqlserver_data:
