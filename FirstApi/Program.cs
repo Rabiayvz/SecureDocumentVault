@@ -43,14 +43,14 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<DocumentService>();
-builder.Services.AddScoped<CryptoService>();
-builder.Services.AddScoped<HashService>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IHashService, HashService>();
+builder.Services.AddScoped<ICryptoService, CryptoService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<AuditLogService>();
-builder.Services.AddScoped<DocumentRepository>();
 
 
 // JWT Authentication kurulumu

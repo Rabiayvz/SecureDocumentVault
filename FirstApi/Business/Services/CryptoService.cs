@@ -2,7 +2,7 @@
 
 namespace FirstApi.Business.Services
 {
-    public class CryptoService
+    public class CryptoService : ICryptoService
     {
         private readonly byte[] _key;
         private readonly ILogger<CryptoService> _logger;

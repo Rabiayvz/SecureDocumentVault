@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FirstApi.Repositories
 {
-    public class DocumentRepository
+    public class DocumentRepository : IDocumentRepository
     {
         private readonly AppDbContext _context;
 

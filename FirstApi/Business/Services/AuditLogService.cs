@@ -5,7 +5,7 @@ using FirstApi.Dtos;
 
 namespace FirstApi.Business.Services
 {
-    public class AuditLogService
+    public class AuditLogService : IAuditLogService
     {
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;

@@ -7,17 +7,17 @@ using FirstApi.Repositories;
 
 namespace FirstApi.Business.Services
 {
-    public class DocumentService
+    public class DocumentService : IDocumentService
     {
         private readonly AppDbContext _context;
-        private readonly CryptoService _cryptoService;
-        private readonly HashService _hashService;
+        private readonly ICryptoService _cryptoService;
+        private readonly IHashService _hashService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly AuditLogService _auditLogService;
-        private readonly DocumentRepository _documentRepository;
+        private readonly IAuditLogService _auditLogService;
+        private readonly IDocumentRepository _documentRepository;
 
 
-        public DocumentService(AppDbContext context, CryptoService cryptoService, HashService hashService, IHttpContextAccessor httpContextAccessor, AuditLogService auditLogService, DocumentRepository documentRepository)
+        public DocumentService(AppDbContext context, ICryptoService cryptoService, IHashService hashService, IHttpContextAccessor httpContextAccessor, IAuditLogService auditLogService, IDocumentRepository documentRepository)
         {
             _context = context;
             _cryptoService = cryptoService;

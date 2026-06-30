@@ -3,7 +3,7 @@ using System.Text;
 
 namespace FirstApi.Business.Services
 {
-    public class HashService
+    public class HashService : IHashService
     {
         public string ComputeHash(string content)
         {

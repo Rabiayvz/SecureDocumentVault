@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FirstApi.Business.Services
 {
-    public class AdminService
+    public class AdminService : IAdminService
     {
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly AuditLogService _auditLogService;
+        private readonly IAuditLogService _auditLogService;
 
 
-        public AdminService(AppDbContext context, IHttpContextAccessor httpContextAccessor, AuditLogService auditLogService)
+        public AdminService(AppDbContext context, IHttpContextAccessor httpContextAccessor, IAuditLogService auditLogService)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;

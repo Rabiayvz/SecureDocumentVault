@@ -10,9 +10,9 @@ namespace FirstApi.Controllers
     [Authorize]
     public class DocumentController : ControllerBase
     {
-        private readonly DocumentService _documentService;
+        private readonly IDocumentService _documentService;
 
-        public DocumentController(DocumentService documentService)
+        public DocumentController(IDocumentService documentService)
         {
             _documentService = documentService;
         }

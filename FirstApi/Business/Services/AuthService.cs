@@ -9,14 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FirstApi.Business.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly AuditLogService _auditLogService;
+        private readonly IAuditLogService _auditLogService;
         private readonly ILogger<AuthService> _logger;
 
-        public AuthService(AppDbContext context, IConfiguration configuration , AuditLogService auditLogService, ILogger<AuthService> logger)
+        public AuthService(AppDbContext context, IConfiguration configuration , IAuditLogService auditLogService, ILogger<AuthService> logger)
         {
             _context = context;
             _configuration = configuration;
