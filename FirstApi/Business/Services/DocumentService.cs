@@ -3,6 +3,7 @@ using FirstApi.Dtos;
 using FirstApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using FirstApi.Repositories;
 
 namespace FirstApi.Business.Services
 {
@@ -13,15 +14,17 @@ namespace FirstApi.Business.Services
         private readonly HashService _hashService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AuditLogService _auditLogService;
+        private readonly DocumentRepository _documentRepository;
 
 
-        public DocumentService(AppDbContext context, CryptoService cryptoService, HashService hashService, IHttpContextAccessor httpContextAccessor, AuditLogService auditLogService)
+        public DocumentService(AppDbContext context, CryptoService cryptoService, HashService hashService, IHttpContextAccessor httpContextAccessor, AuditLogService auditLogService, DocumentRepository documentRepository)
         {
             _context = context;
             _cryptoService = cryptoService;
             _hashService = hashService;
             _httpContextAccessor = httpContextAccessor;
             _auditLogService = auditLogService;
+            _documentRepository = documentRepository;
         }
 
         private Guid GetCurrentUserId()
@@ -57,8 +60,8 @@ namespace FirstApi.Business.Services
             };
 
             //db save
-            _context.Documents.Add(document);
-            _context.SaveChanges();
+            _documentRepository.Add(document);
+            _documentRepository.SaveChanges();
             _auditLogService.Log("DocumentCreated", $"Document '{document.Title}' created. Id: {document.Id}");
             return document.Id;
         }
@@ -68,7 +71,7 @@ namespace FirstApi.Business.Services
             var userId = GetCurrentUserId();
             var role = GetCurrentUserRole();
             
-            var document = _context.Documents.Find(documentId);
+            var document = _documentRepository.GetById(documentId);
             if (document == null) return null;
 
             // User sadece kendi belgesini verify edebilir
@@ -106,7 +109,7 @@ namespace FirstApi.Business.Services
             var userId = GetCurrentUserId();
             var role = GetCurrentUserRole();
 
-            IQueryable<Document> query = _context.Documents;
+            IQueryable<Document> query = _documentRepository.Query();
 
             if (role == "Admin")
             {
@@ -143,7 +146,7 @@ namespace FirstApi.Business.Services
             var userId = GetCurrentUserId();
             var role = GetCurrentUserRole();
             
-            var document = _context.Documents.Find(documentId);
+            var document = _documentRepository.GetById(documentId);
             if (document == null) return null;
 
             // Auditor içerik okuyamaz

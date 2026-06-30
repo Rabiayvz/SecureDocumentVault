@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using FirstApi.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddScoped<DocumentRepository>();
 
 
 // JWT Authentication kurulumu
