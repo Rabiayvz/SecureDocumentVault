@@ -14,12 +14,14 @@ namespace FirstApi.Business.Services
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly AuditLogService _auditLogService;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(AppDbContext context, IConfiguration configuration , AuditLogService auditLogService)
+        public AuthService(AppDbContext context, IConfiguration configuration , AuditLogService auditLogService, ILogger<AuthService> logger)
         {
             _context = context;
             _configuration = configuration;
             _auditLogService = auditLogService;
+            _logger = logger;
         }
 
         public Guid Register(RegisterDto dto)
@@ -52,17 +54,20 @@ namespace FirstApi.Business.Services
                 .FirstOrDefault(u => u.Email == dto.Email);
             if (user == null)
             {
+                _logger.LogWarning("Login attempt failed for email: {Email}. User not found.", dto.Email);
                 return null; // kullanıcı bulunamadı
             }
 
             var isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
             if (!isPasswordValid)
             {
+                _logger.LogWarning("Login attempt failed for email: {Email}. Invalid password.", dto.Email);
                 return null; // şifre yanlış
             }
 
             var token = GenerateJwtToken(user);
             _auditLogService.Log("UserLoggedIn", $"User '{user.Email}' logged in.", user.Id);
+            _logger.LogInformation("User logged in successfully: {Email}", user.Email);
             return token;        }
 
         private string GenerateJwtToken(User user)
