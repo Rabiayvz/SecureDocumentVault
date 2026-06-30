@@ -48,5 +48,13 @@ namespace FirstApi.Controllers
             if (result == null) return NotFound();
             return Ok(result.Value ? "Document is valid" : "Document is invalid");
         }
+
+        [HttpPost("{id}/verify-signature")]
+        public IActionResult VerifyDocumentSignature(Guid id)
+        {
+            var result = _documentService.VerifyDocumentSignature(id);
+            if (result == null) return NotFound();
+            return Ok(result.Value ? "Signature is valid" : "Signature is invalid");
+        }
     }
 }

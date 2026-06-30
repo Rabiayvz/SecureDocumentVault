@@ -51,6 +51,8 @@ builder.Services.AddScoped<IHashService, HashService>();
 builder.Services.AddScoped<ICryptoService, CryptoService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ISignatureService, SignatureService>();
+
 
 
 // JWT Authentication kurulumu

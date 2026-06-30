@@ -15,9 +15,9 @@ namespace FirstApi.Business.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IAuditLogService _auditLogService;
         private readonly IDocumentRepository _documentRepository;
+        private readonly ISignatureService _signatureService;
 
-
-        public DocumentService(AppDbContext context, ICryptoService cryptoService, IHashService hashService, IHttpContextAccessor httpContextAccessor, IAuditLogService auditLogService, IDocumentRepository documentRepository)
+        public DocumentService(AppDbContext context, ICryptoService cryptoService, IHashService hashService, IHttpContextAccessor httpContextAccessor, IAuditLogService auditLogService, IDocumentRepository documentRepository, ISignatureService signatureService)
         {
             _context = context;
             _cryptoService = cryptoService;
@@ -25,6 +25,7 @@ namespace FirstApi.Business.Services
             _httpContextAccessor = httpContextAccessor;
             _auditLogService = auditLogService;
             _documentRepository = documentRepository;
+            _signatureService = signatureService;
         }
 
         private Guid GetCurrentUserId()
@@ -49,6 +50,8 @@ namespace FirstApi.Business.Services
 
             var encryptedContent = _cryptoService.Encrypt(dto.Content);
             var contentHash = _hashService.ComputeHash(dto.Content);
+            var signature = _signatureService.Sign(contentHash);
+
 
             //entity
             var document = new Document
@@ -56,6 +59,7 @@ namespace FirstApi.Business.Services
                 Title = dto.Title,
                 EncryptedContent = encryptedContent,
                 ContentHash = contentHash,
+                Signature = signature,
                 OwnerUserId = userId
             };
 
@@ -99,6 +103,38 @@ namespace FirstApi.Business.Services
 
             return result;
 
+        }
+
+        public bool? VerifyDocumentSignature(Guid documentId)
+        {
+            var userId = GetCurrentUserId();
+            var role = GetCurrentUserRole();
+
+            var document = _documentRepository.GetById(documentId);
+            if (document == null) return null;
+
+            // Aynı yetki kuralları verify ile aynı
+            if (role == "User" && document.OwnerUserId != userId)
+                throw new UnauthorizedAccessException("You can only verify your own documents.");
+
+            if (role == "Manager")
+            {
+                var teamUserIds = _context.Users
+                    .Where(u => u.ManagerId == userId)
+                    .Select(u => u.Id)
+                    .ToList();
+
+                teamUserIds.Add(userId);
+
+                if (!teamUserIds.Contains(document.OwnerUserId))
+                    throw new UnauthorizedAccessException("You can only verify your team's documents.");
+            }
+
+            var isValid = _signatureService.VerifySignature(document.ContentHash, document.Signature);
+
+            _auditLogService.Log("SignatureVerified", $"Document '{document.Title}' signature verified. Id: {documentId}. Result: {isValid}");
+
+            return isValid;
         }
 
 
